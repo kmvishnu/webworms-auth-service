@@ -1,0 +1,23 @@
+{
+  "name": "webworms-auth-service",
+  "version": "1.0.0",
+  "description": "Centralized service for authentication",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "npm run build && node dist/app.js",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "Webworms",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.10.2",
+    "express": "^4.21.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
+  }
+}
