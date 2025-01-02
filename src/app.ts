@@ -7,15 +7,15 @@ import { connectToRedis } from "./config/redisClient";
 dotenv.config();
 
 const app = express();
-
 connectDB();
 
-
-connectToRedis().then(() => {
-  console.log("Connected to Redis");
-}).catch((err) => {
-  console.error("Failed to connect to Redis:", err);
-});
+connectToRedis()
+  .then(() => {
+    console.log("Connected to Redis");
+  })
+  .catch((err) => {
+    console.error("Failed to connect to Redis:", err);
+  });
 
 app.use(express.json());
 app.use("/v1", appRoutes);
