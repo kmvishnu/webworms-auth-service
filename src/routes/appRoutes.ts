@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { getAppInfo } from '../controllers/appController';
 
-const router = Router();
+const V1Routes = Router();
 
-router.get('/info', getAppInfo);
+// V1Routes.post("/sendOtp",sendOtp)
+// V1Routes.post("/verifyOtp",verifyOtp)
+// V1Routes.post("/login",login)
+// V1Routes.post("/refreshToken",refreshToken)
 
-export default router;
+export default V1Routes;
