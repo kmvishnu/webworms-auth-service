@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const client = createClient({
+export const client = createClient({
   url: `redis://${process.env.REDDIT_USERNAME}:${process.env.REDDIT_PASSWORD}@${process.env.REDDIT_HOST}:${process.env.REDDIT_PORT}`,
 });
 
