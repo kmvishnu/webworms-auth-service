@@ -35,34 +35,33 @@ export const sendOtp = async (req, res) => {
 
     if (resendData) {
       const { count, lastSent } = JSON.parse(resendData);
-    
+
       if (count >= 3) {
         return res.status(429).json({
           status: "false",
           message: "Resend limit reached. Please try again after an hour.",
         });
       }
-    
+
       if (currentTime - lastSent < 60000) {
         return res.status(429).json({
           status: "false",
           message: "You can resend an OTP only after 1 minute.",
         });
       }
-    
+
       await client.set(
         resendKey,
         JSON.stringify({ count: count + 1, lastSent: currentTime }),
-        { KEEPTTL: true } 
+        { KEEPTTL: true }
       );
     } else {
       await client.set(
         resendKey,
         JSON.stringify({ count: 1, lastSent: currentTime }),
-        { EX: 3600 } 
+        { EX: 3600 }
       );
     }
-    
 
     const emailStatus = await sendOtpMail(email);
     if (emailStatus) {

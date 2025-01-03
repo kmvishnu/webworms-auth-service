@@ -1,33 +1,60 @@
-import jwt from "jsonwebtoken";
+import { NextFunction, Request, Response } from "express";
+
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { verifyUser } from "../../components/v1/userComponent";
+import { AppError, HttpStatusCode } from "../../types/errors";
+import {
+  LoginRequestSchema,
+  RefreshTokenRequestSchema,
+} from "../../types/request.types";
 import { saveRefreshToken, verifyRefreshToken } from "../../config/redisClient";
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const user: any = await verifyUser(email);
+    const validatedData = LoginRequestSchema.parse(req.body);
+    const { email, password } = validatedData;
 
-    if (user === null) {
-      return res.status(401).json({ error: "Invalid email or password" });
+    const user = await verifyUser(email);
+    if (!user) {
+      throw new AppError(
+        HttpStatusCode.UNAUTHORIZED,
+        "auth_error",
+        "Invalid email or password"
+      );
     }
 
-    const hashedPassword = user ? user.password : "";
-
+    const hashedPassword = user.password;
     const passwordMatch = await bcrypt.compare(password, hashedPassword);
 
     if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      throw new AppError(
+        HttpStatusCode.UNAUTHORIZED,
+        "auth_error",
+        "Invalid email or password"
+      );
     }
 
     const jwtSecretKey = process.env.JWT_SECRET_KEY;
     const jwtRefreshKey = process.env.JWT_REFRESH_KEY;
+    if (!jwtSecretKey) {
+      throw new AppError(
+        HttpStatusCode.INTERNAL_SERVER,
+        "config_error",
+        "JWT secret key not configured"
+      );
+    }
 
     const data = {
       time: Date(),
       name: user.name,
-      id: user._id,
-      exp: Math.floor(Date.now() / 1000) + Number(process.env.EXPIRESIN),
+      id: user.id,
+      exp:
+        Math.floor(Date.now() / 1000) + Number(process.env.EXPIRESIN || "3600"),
     };
 
     const refreshData = {
@@ -46,44 +73,84 @@ export const login = async (req, res) => {
       Number(process.env.REFRESH_TOKEN_EXPIRESIN)
     );
 
-    res.status(200).json({
+    res.status(HttpStatusCode.OK).json({
       status: "success",
       token,
       refreshToken,
-      name: user ? user.name : "",
+      name: user.name,
     });
   } catch (error) {
-    console.error("Error during login:", error);
-    return res.status(500).json({ error: "Internal server error" }); // Return generic error response
+    next(error);
   }
 };
 
-export const refreshToken = async (req, res) => {
-    debugger
-  const { refreshToken } = req.body; // Extract the refreshToken from the request body
-  const jwtSecretKey = process.env.JWT_SECRET_KEY;
-  const jwtRefreshKey = process.env.JWT_REFRESH_KEY;
-  if (!refreshToken) return res.status(401); // If no refreshToken is provided, send a 401 Unauthorized status
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const validatedData = RefreshTokenRequestSchema.parse(req.body);
+    const { refreshToken } = validatedData;
 
-  // Verify the refresh refreshToken using Redis
-  const userId = await verifyRefreshToken(refreshToken);
-  if (!userId) return res.status(403); // If the refreshToken is not valid, send a 403 Forbidden status
+    const jwtSecretKey = process.env.JWT_SECRET_KEY;
+    const jwtRefreshKey = process.env.JWT_REFRESH_KEY;
+    if (!jwtSecretKey) {
+      throw new AppError(
+        HttpStatusCode.INTERNAL_SERVER,
+        "config_error",
+        "JWT secret key not configured"
+      );
+    }
 
-  // Verify the refresh refreshToken's integrity
-  jwt.verify(refreshToken, jwtRefreshKey, async (err, user) => {
-    if (err || !user) return res.status(403); // If token verification fails, send a 403 Forbidden status
+    try {
+      const userId = await verifyRefreshToken(refreshToken);
+      if (!userId) {
+        throw new AppError(
+          HttpStatusCode.FORBIDDEN,
+          "auth_error",
+          "Invalid or expired refresh token"
+        );
+      }
+      const decoded = jwt.verify(refreshToken, jwtRefreshKey) as jwt.JwtPayload;
 
-    console.log(user);
+      const newToken = jwt.sign(
+        {
+          time: Date(),
+          name: decoded.name,
+          id: decoded.id,
+          exp:
+            Math.floor(Date.now() / 1000) +
+            Number(process.env.EXPIRESIN || "3600"),
+        },
+        jwtSecretKey
+      );
 
-    const data = {
-      time: Date(),
-      name: user.name,
-      id: user.id,
-      exp: Math.floor(Date.now() / 1000) + Number(process.env.EXPIRESIN),
-    };
+      res.status(HttpStatusCode.OK).json({
+        status: "success",
+        token: newToken,
+        name: decoded.name,
+      });
+    } catch (jwtError) {
+      if (jwtError instanceof jwt.TokenExpiredError) {
+        throw new AppError(
+          HttpStatusCode.UNAUTHORIZED,
+          "auth_error",
+          "Token has expired"
+        );
+      }
 
-    const token = jwt.sign(data, jwtSecretKey);
+      if (jwtError instanceof jwt.JsonWebTokenError) {
+        throw new AppError(
+          HttpStatusCode.UNAUTHORIZED,
+          "auth_error",
+          "Invalid token"
+        );
+      }
 
-    res.json({ token });
-  });
+      throw jwtError;
+    }
+  } catch (error) {
+    next(error);
+  }
 };

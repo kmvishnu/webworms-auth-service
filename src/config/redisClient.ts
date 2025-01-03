@@ -21,11 +21,11 @@ export const connectToRedis = async () => {
 
 export const saveRefreshToken = async (
   token: string,
-  userId: number,
+  userId: string,
   expiryInSeconds: number
 ): Promise<void> => {
   try {
-    await client.set(token, userId.toString(), {
+    await client.set(token, userId, {
       EX: expiryInSeconds,
     });
     console.log("Token saved to Redis");

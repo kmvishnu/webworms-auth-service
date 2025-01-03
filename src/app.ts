@@ -3,6 +3,7 @@ import appRoutes from "./routes/appRoutes";
 import dotenv from "dotenv";
 import connectDB from "./config/db.config";
 import { connectToRedis } from "./config/redisClient";
+import { errorHandler } from "./middlewares/errorHandler";
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ app.use("/v1", appRoutes);
 app.get("/healthCheck", (req: Request, res: Response) => {
   res.send("Webworms auth-service is up and running!");
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
