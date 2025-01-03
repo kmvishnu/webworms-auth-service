@@ -32,3 +32,23 @@ export const createUser = async (
     return false;
   }
 };
+
+export const updateUser = async (
+  email: string,
+  password: string
+): Promise<boolean> => {
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return false;
+  }
+};
