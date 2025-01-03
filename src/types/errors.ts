@@ -7,6 +7,7 @@ export enum HttpStatusCode {
   NOT_FOUND = 404,
   INTERNAL_SERVER = 500,
   OK = 200,
+  TOO_MANY_REQUESTS = 429,
 }
 
 export class AppError extends Error {
