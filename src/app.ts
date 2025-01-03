@@ -4,10 +4,16 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.config";
 import { connectToRedis } from "./config/redisClient";
 import { errorHandler } from "./middlewares/errorHandler";
+import { securityMiddlewares } from "./middlewares/securityMiddleware";
 
 dotenv.config();
 
 const app = express();
+
+app.use(securityMiddlewares.helmet());
+app.use(securityMiddlewares.rateLimiter());
+app.use(securityMiddlewares.cors());
+
 connectDB();
 
 connectToRedis()
