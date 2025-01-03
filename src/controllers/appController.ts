@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
 export const getAppInfo = (req: Request, res: Response) => {
-  res.json({ message: 'This is a Node.js service with TypeScript!' });
+  res.json({ message: "This is a Node.js service with TypeScript!" });
 };

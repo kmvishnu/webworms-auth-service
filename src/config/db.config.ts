@@ -4,12 +4,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const options = {
-    autoIndex: false,
-    maxPoolSize: 10, 
-    serverSelectionTimeoutMS: 5000, 
-    socketTimeoutMS: 45000, 
-    family: 4 
-  };
+  autoIndex: false,
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4,
+};
 
 const connectDB = async () => {
   try {
@@ -17,7 +17,7 @@ const connectDB = async () => {
     console.log("MongoDB Connected...");
   } catch (err) {
     console.error("Database connection error:", err);
-    process.exit(1); 
+    process.exit(1);
   }
 };
 
