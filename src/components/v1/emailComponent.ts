@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 
 export const verifyEmail = async (email: string): Promise<boolean> => {
   try {
-    const user = await User.findOne({ emailId: email });
+    const user = await User.findOne({ email: email });
 
     return !!user;
   } catch (error) {
@@ -33,7 +33,7 @@ export const sendOtpMail = async (email: string) => {
       from: process.env.FROM_USER,
       to: email,
       subject: "OTP To Complete Your Signup",
-      html: `<html> <h1>Hi,</h1> <br/><p style="color:grey; font-size:1.2em">Please use the below OTP code to complete your account setup on My App</p><br><br><h1 style="color:orange">${code}</h1></html>`,
+      html: `<html> <h1>Hi,</h1> <br/><p style="color:grey; font-size:1.2em">Please use the below OTP code to complete your account setup</p><br><br><h1 style="color:orange">${code}</h1></html>`,
     };
 
     const expiryDate = Date.now() + 180000;

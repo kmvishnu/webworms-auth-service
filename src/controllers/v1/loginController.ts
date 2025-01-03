@@ -5,7 +5,6 @@ import { saveRefreshToken, verifyRefreshToken } from "../../config/redisClient";
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  debugger
   try {
     const user: any = await verifyUser(email);
 
